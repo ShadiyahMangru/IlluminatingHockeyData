@@ -86,26 +86,49 @@ class HockeyPlayer implements Comparable<HockeyPlayer>{
     	
 	
 	//setters
+	/**
+	* method that initializes the lastName field
+	* @param String last name of player
+	*/
 	public void setLastName(String lastName){
 		this.lastName = lastName;	
 	}
 	
+	/**
+	* method that initializes the position field
+	* @param String position of player
+	*/
 	public void setPosition(String position){
 		this.position = position;	
 	}
 	
+	/**
+	* method that initializes the birthplace field
+	* @param String birthplace (country) of player
+	*/
 	public void setBirthplace(String birthplace){
 		this.birthplace = birthplace;	
 	}
 	
+	/**
+	* method that initializes the position-specific stats of the player
+	* @param int varargs of player's position-specific stats
+	*/
 	public void setStats(int... stats){
 		this.stats = stats;
 	}
 	
+	/**
+	* method that initializes the roster field
+	* @param ArrayList<HockeyPlayer> roster
+	*/
 	public void setRoster(ArrayList<HockeyPlayer> players){
 		roster = new ArrayList<HockeyPlayer>(players);	
 	}
 	
+	/**
+	* method that initializes the team roster (potentially a call to a database)
+	*/
 	public void setRoster(){
 		roster = new ArrayList<HockeyPlayer>();
 		roster.add(new HockeyPlayer("Ovechkin", "Forward, LW", "Russia", 49, 38, 87, 3, 0));
@@ -141,6 +164,7 @@ class HockeyPlayer implements Comparable<HockeyPlayer>{
 		roster.add(new HockeyPlayer("Grubauer", "Goalie", "Germany", 953, 73, 880));
 	}
 	
+	
 	public void setRosterSorted(){
 		rosterSorted = new ArrayList<HockeyPlayer>(getRoster());
 		Collections.sort(rosterSorted);
@@ -170,14 +194,26 @@ class HockeyPlayer implements Comparable<HockeyPlayer>{
 	}
 	
 	//getters
+	/**
+	* method that returns the value of the instance variable lastName
+	* @return String lastName
+	*/
 	public String getLastName(){
 		return lastName;	
 	}
 	
+	/**
+	* method that returns the value of the instance variable position
+	* @return String position
+	*/
 	public String getPosition(){
 		return position;	
 	}
 	
+	/**
+	* method that returns the value of the instance variable birthplace
+	* @return String birthplace
+	*/
 	public String getBirthplace(){
 		return birthplace;	
 	}
@@ -233,6 +269,8 @@ class Output{
 	public Output(){
 		setReader();
 		setHP();
+		setJustG();
+		setJustSk();
 	}
 	
 	//setters
@@ -326,12 +364,13 @@ class Output{
 		}
 	}
 	
-	public void printSkaterStats(HockeyPlayer skater){
-		System.out.println("Position: " + skater.getPosition() + "\tGoals: " + skater.getStats()[0] + "\tAssists: " + skater.getStats()[1] + "\tPoints: " + skater.getStats()[2] + "\t+/-: " + skater.getStats()[3] + "\t\tName: " + skater.getLastName());	
-	}
-	
-	public void printGoalieStats(HockeyPlayer goalie){
-		System.out.println("Position: " + goalie.getPosition() + "\tShots Against: " + goalie.getStats()[0] + "\tGoals Against: " + goalie.getStats()[1] + "\tSaves: " + goalie.getStats()[2] + "\t\tName: " + goalie.getLastName());	
+	public void printStats(HockeyPlayer player, int type){
+		if(type == 0){ //skater
+			System.out.println("Position: " + player.getPosition() + "\tGoals: " + player.getStats()[0] + "\tAssists: " + player.getStats()[1] + "\tPoints: " + player.getStats()[2] + "\t+/-: " + player.getStats()[3] + "\t\tName: " + player.getLastName());	
+		}
+		else{
+			System.out.println("Position: " + player.getPosition() + "\tShots Against: " + player.getStats()[0] + "\tGoals Against: " + player.getStats()[1] + "\tSaves: " + player.getStats()[2] + "\t\tName: " + player.getLastName());	
+		}
 	}
 	
 	//method to determine which option (from given options), user selects
@@ -371,10 +410,10 @@ class Display extends Output{
 	public void printRoster(){
 		for(HockeyPlayer player : getHP().getRoster()){
 			if(player.getStats().length == 5){
-				printSkaterStats(player);	
+				printStats(player, 0);	
 			}
 			else{
-				printGoalieStats(player);
+				printStats(player, 1);
 			}
 		}
 	}
@@ -420,13 +459,13 @@ class Sort extends Output{
 		return "As of " + LocalDate.now() + " " + stat + " " + boundType + " = " + statMinMax;	
 	}
 
-	//method to output user-defined sorted(some/all) goalie stats
-	public void outputSortedGoalieStat(ArrayList<HockeyPlayer> sortedRoster, int userMin, int userMax, int userChoice){
-		for(HockeyPlayer g : sortedRoster){
+	//method to output user-defined sorted(some/all) player stats
+	public void outputSortedStat(ArrayList<HockeyPlayer> sortedRoster, int userMin, int userMax, int userChoice, int type){
+		for(HockeyPlayer h : sortedRoster){
 			try{
-				if(g.getStats()[userChoice-1] >= userMin){
-					if(g.getStats()[userChoice-1] <= userMax){
-						printGoalieStats(g);	
+				if(h.getStats()[userChoice-1] >= userMin){
+					if(h.getStats()[userChoice-1] <= userMax){
+						printStats(h, type);	
 					}
 				}	
 			}
@@ -435,62 +474,30 @@ class Sort extends Output{
 			}
 		}	
 	}
-	
-	//method to output user-defined sorted(some/all) skater stats
-	public void outputSortedSkaterStat(ArrayList<HockeyPlayer> sortedRoster, int userMin, int userMax, int userChoice){
-		for(HockeyPlayer s : sortedRoster){
-			try{	
-				if(s.getStats()[userChoice-1] >= userMin){
-					if(s.getStats()[userChoice-1] <= userMax){
-						printSkaterStats(s);	
-					}
-				}
-			}
-			catch(Exception e){
-				System.out.println("Exception: " + e);	
-			}
-		}		
+
+	public void outputPlayersSorted(int userChoice, String[] sortPlayerStats, int type, String position, ArrayList<HockeyPlayer> positionType){
+		HockeyPlayer h = new HockeyPlayer(userChoice, positionType);
+		int rosterMin = h.getRosterSorted().get(0).getStats()[userChoice - 1];
+		int rosterMax = h.getRosterSorted().get(h.getRosterSorted().size() - 1).getStats()[userChoice-1];
+		System.out.println(setBound("MIN", sortPlayerStats[userChoice-1], rosterMin));
+		System.out.println(setBound("MAX", sortPlayerStats[userChoice-1], rosterMax));
+		int userMin = userMinMax(sortPlayerStats[userChoice-1], "MIN");
+		int userMax = userMinMax(sortPlayerStats[userChoice-1], "MAX");
+		System.out.println("\nCAPS " + position + " with " + userMin + " <= " + sortPlayerStats[userChoice-1] + " <= " + userMax + " are:");
+		outputSortedStat(h.getRosterSorted(), userMin, userMax, userChoice, type);
 	}
-	
-	public void outputGoaliesSorted(int userChoice){
-		setJustG();
-		HockeyPlayer g = new HockeyPlayer(userChoice, getJustG());
-		int rosterMin = g.getRosterSorted().get(0).getStats()[userChoice - 1];
-		int rosterMax = g.getRosterSorted().get(g.getRosterSorted().size() - 1).getStats()[userChoice-1];
-		System.out.println(setBound("MIN", sortGoalieStats[userChoice-1], rosterMin));
-		System.out.println(setBound("MAX", sortGoalieStats[userChoice-1], rosterMax));
-		int userMin = userMinMax(sortGoalieStats[userChoice-1], "MIN");
-		int userMax = userMinMax(sortGoalieStats[userChoice-1], "MAX");
-		
-		System.out.println("\nCAPS GOALIES with " + userMin + " <= " + sortGoalieStats[userChoice-1] + " <= " + userMax + " are:");
-		outputSortedGoalieStat(g.getRosterSorted(), userMin, userMax, userChoice);
-	}
-	
-	public void outputSkatersSorted(int userChoice){
-		setJustSk();
-		HockeyPlayer s = new HockeyPlayer(userChoice, getJustSk());
-		int rosterMin = s.getRosterSorted().get(0).getStats()[userChoice - 1];
-		int rosterMax = s.getRosterSorted().get(s.getRosterSorted().size() - 1).getStats()[userChoice-1];
-		System.out.println(setBound("MIN", sortSkaterStats[userChoice-1], rosterMin));
-		System.out.println(setBound("MAX", sortSkaterStats[userChoice-1], rosterMax));
-		int userMin = userMinMax(sortSkaterStats[userChoice-1], "MIN");
-		int userMax = userMinMax(sortSkaterStats[userChoice-1], "MAX");
-		
-		System.out.println("\nCAPS SKATERS with " + userMin + " <= " + sortSkaterStats[userChoice-1] + " <= " + userMax + " are:");
-		outputSortedSkaterStat(s.getRosterSorted(), userMin, userMax, userChoice);
-	}
-	
+
 	//a method that outputs a menu to select type of sorted stats to display on screen
 	public void userSortOptions(){
 		int sortGoalieOrSkater = userOptions(sortMainMenu);
 		int userChoice = 0;
 		if(sortGoalieOrSkater == 1){ 
 			userChoice = userOptions(sortGoalieStats);
-			outputGoaliesSorted(userChoice);
+			outputPlayersSorted(userChoice, sortGoalieStats, 1, "GOALIES", getJustG());
 		}
 		else{ 
 			userChoice = userOptions(sortSkaterStats);
-			outputSkatersSorted(userChoice);
+			outputPlayersSorted(userChoice, sortSkaterStats, 0, "SKATERS", getJustSk());
 		}
 		mainMenu();
 	}
